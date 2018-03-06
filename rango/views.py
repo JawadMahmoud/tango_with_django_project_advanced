@@ -17,6 +17,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from datetime import datetime
+from rango.webhose_search import run_query
 
 
 
@@ -58,7 +59,7 @@ def show_category(request, category_name_slug):
 @login_required
 def add_category(request):
     form = CategoryForm()
-
+    context_dict = {}
     # A HTTP POST?
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -68,8 +69,10 @@ def add_category(request):
             return index(request)
         else:
             print(form.errors)
+
+    context_dict['form'] = form
     
-    return render(request, 'rango/add_category.html', {'form' : form})
+    return render(request, 'rango/add_category.html', context_dict)
 
 @login_required
 def add_page(request, category_name_slug):
@@ -178,3 +181,13 @@ def visitor_cookie_handler(request):
         request.session['last_visit'] = last_visit_cookie
 
     request.session['visits'] = visits
+
+def search(request):
+    result_list = []
+
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+        if query:
+            result_list = run_query(query)
+
+    return render(request, 'rango/search.html', {'result_list': result_list})
